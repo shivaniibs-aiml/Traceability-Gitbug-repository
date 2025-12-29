@@ -1,10 +1,12 @@
 from flask import Flask, jsonify, request
+from flask_cors import CORS  # <- import CORS
 import os
 import json
 import gspread
 from google.oauth2.service_account import Credentials
 
 app = Flask(__name__)
+CORS(app)  # <- enable CORS for all routes
 
 def get_sheet():
     creds_dict = json.loads(os.environ["GOOGLE_CREDENTIALS_JSON"])
@@ -13,7 +15,8 @@ def get_sheet():
         scopes=["https://www.googleapis.com/auth/spreadsheets.readonly"]
     )
     client = gspread.authorize(creds)
-    return client.open_by_key(os.environ["GOOGLE_SHEET_ID"]).sheet1
+    sheet = client.open_by_key(os.environ["GOOGLE_SHEET_ID"]).sheet1
+    return sheet
 
 @app.route("/")
 def health():
@@ -23,7 +26,7 @@ def health():
 def get_batch():
     batch_id = request.args.get("batch_id")
     if not batch_id:
-        return jsonify({"error": "batch_id is required"}), 400
+        return jsonify({"error": "batch_id parameter missing"}), 400
 
     sheet = get_sheet()
     records = sheet.get_all_records()
@@ -36,4 +39,5 @@ def get_batch():
 
 if __name__ == "__main__":
     app.run()
+
 
