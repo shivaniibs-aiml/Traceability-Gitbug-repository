@@ -1,12 +1,13 @@
 from flask import Flask, jsonify, request
-from flask_cors import CORS  # <- import CORS
+from flask_cors import CORS
 import os
 import json
 import gspread
 from google.oauth2.service_account import Credentials
 
 app = Flask(__name__)
-CORS(app)  # <- enable CORS for all routes
+CORS(app)  # Enable CORS for all routes
+
 
 def get_sheet():
     creds_dict = json.loads(os.environ["GOOGLE_CREDENTIALS_JSON"])
@@ -18,24 +19,19 @@ def get_sheet():
     sheet = client.open_by_key(os.environ["GOOGLE_SHEET_ID"]).sheet1
     return sheet
 
-@app.route("/")
+
+@app.route("/", methods=["GET"])
 def health():
     return jsonify({"status": "API running"})
 
-@app.route("/batch")
-def get_batch():
-    batch_id = request.args.get("batch_id")
-    if not batch_id:
-        return jsonify({"error": "batch_id parameter missing"}), 400
-from flask import request  # ensure this import exists
 
-@app.route("/batch")
+@app.route("/batch", methods=["GET"])
 def get_batch():
-    # Normalize incoming batch ID
+    # Normalize incoming batch ID (case-insensitive)
     batch_id = request.args.get("batch_id", "").strip().upper()
 
     if not batch_id:
-        return jsonify({"error": "Batch ID missing"}), 400
+        return jsonify({"error": "batch_id parameter missing"}), 400
 
     sheet = get_sheet()
     records = sheet.get_all_records()
@@ -47,16 +43,8 @@ def get_batch():
 
     return jsonify({"error": "Batch not found"}), 404
 
-    sheet = get_sheet()
-    records = sheet.get_all_records()
-
-    for row in records:
-        if str(row.get("batch_id")).strip() == batch_id:
-            return jsonify(row)
-
-    return jsonify({"error": "Batch not found"}), 404
 
 if __name__ == "__main__":
-    app.run()
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
 
 
