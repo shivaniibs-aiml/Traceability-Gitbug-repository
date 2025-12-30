@@ -27,6 +27,25 @@ def get_batch():
     batch_id = request.args.get("batch_id")
     if not batch_id:
         return jsonify({"error": "batch_id parameter missing"}), 400
+from flask import request  # ensure this import exists
+
+@app.route("/batch")
+def get_batch():
+    # Normalize incoming batch ID
+    batch_id = request.args.get("batch_id", "").strip().upper()
+
+    if not batch_id:
+        return jsonify({"error": "Batch ID missing"}), 400
+
+    sheet = get_sheet()
+    records = sheet.get_all_records()
+
+    for row in records:
+        sheet_batch = str(row.get("batch_id", "")).strip().upper()
+        if sheet_batch == batch_id:
+            return jsonify(row)
+
+    return jsonify({"error": "Batch not found"}), 404
 
     sheet = get_sheet()
     records = sheet.get_all_records()
