@@ -34,7 +34,7 @@ def get_batch():
         return jsonify({"error": "batch_id parameter missing"}), 400
 
     sheet = get_sheet()
-    records = sheet.get_all_records()
+    records = sheet.get_all_records(value_render_option="FORMULA")
 
     for row in records:
         sheet_batch = str(row.get("batch_id", "")).strip().upper()
